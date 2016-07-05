@@ -1,30 +1,46 @@
 package com.shaunlp.pwencrypt;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.support.design.widget.Snackbar;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import android.support.design.widget.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String mPassword;
-    private LayoutInflater inflater;
-    private CheckBox showPwCheckBox;
-    private EditText userInput;
     private View promptView;
+    private String mPassword;
+    private EditText userInput;
+    private CheckBox showPwCheckBox;
+    private LayoutInflater inflater;
+
+    SharedPreferences sp;
+    SharedPreferences.Editor spEditor;
+    private final String pwHash = "pwHash";
+    public static final String sharedPrefs = "PwEncryptSP";
+    public static final String changePw = "changePw";
     private final String LOG_TAG = "MainActivity";
 
     @Override
@@ -33,14 +49,45 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         inflater = LayoutInflater.from(this);
 
-        AlertDialog alertDialog = pwPromptBuilder();
+        // get shared prefs
+        sp = getSharedPreferences(sharedPrefs, Context.MODE_PRIVATE);
+        spEditor = sp.edit();
+
+        if (!sp.contains(changePw)) {
+            // Add shared pref if not there and set to false
+            spEditor.putBoolean(changePw, true);
+            spEditor.commit();
+        }
+
+        Boolean pwFlag = sp.getBoolean(changePw, true);
+
+        AlertDialog alertDialog = pwPromptBuilder(pwFlag);
         alertDialog.show();
 
         addCheckBoxListener();
 
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent addPwIntent = new Intent(MainActivity.this, AddPwActivity.class);
+                startActivity(addPwIntent);
+            }
+        });
+
     }
 
-    protected AlertDialog pwPromptBuilder() {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.dash, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_spinner);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new CustomQueryTextListener());
+        return true;
+    }
+
+    // Todo: probaly should make a class for this
+    protected AlertDialog pwPromptBuilder(final boolean newPwFlag) {
         promptView = inflater.inflate(R.layout.prompts, null);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -50,13 +97,28 @@ public class MainActivity extends AppCompatActivity {
         userInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
         alertDialogBuilder
-                .setCancelable(false)
+                .setCancelable(true)
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
-
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 mPassword = computeSHA1(userInput.getText().toString());
+
+                                if (newPwFlag) {
+                                    // write new pw to shared prefs
+                                    spEditor.putString(pwHash, mPassword);
+                                    spEditor.putBoolean(changePw, false);
+                                    spEditor.commit();
+
+                                } else {
+                                    // check if pw matches shared prefs
+                                    String spPwHash = sp.getString(pwHash, null);
+                                    if (spPwHash.equals(mPassword)) {
+                                        Toast.makeText(MainActivity.this, "Password matched", Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Invalid", Toast.LENGTH_LONG).show();
+                                    }
+                                }
                                 TextView tv = (TextView) findViewById(R.id.main_text_view);
                                 tv.setText(mPassword);
                             }
@@ -105,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     private static String convertToHex(byte[] data) throws IOException {
         StringBuffer sb = new StringBuffer();
         String hex;
-        hex = Base64.encodeToString(data, 0, data.length, 0);
+        hex = Base64.encodeToString(data, 0, data.length, 0).trim();
         sb.append(hex);
         return sb.toString();
     }
