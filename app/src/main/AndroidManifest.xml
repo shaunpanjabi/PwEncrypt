@@ -16,6 +16,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".AddPwActivity"></activity>
+
+        <provider
+            android:authorities="com.shaunlp.pwencrypt.PwDataProvider"
+            android:name=".PwDataProvider"
+            android:exported="true"
+            android:multiprocess="true" />
     </application>
 
 </manifest>

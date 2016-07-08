@@ -58,7 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Save"
-        android:id="@+id/button"
+        android:id="@+id/save_button"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
