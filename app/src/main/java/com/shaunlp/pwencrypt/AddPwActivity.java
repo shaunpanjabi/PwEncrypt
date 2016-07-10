@@ -1,6 +1,7 @@
 package com.shaunlp.pwencrypt;
 
 import android.content.ContentValues;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -57,6 +58,8 @@ public class AddPwActivity extends AppCompatActivity {
                     if (!TextUtils.isEmpty(notesTxt)){
                         values.put(PwDataProvider.notes, notesTxt);
                     }
+
+                    Uri uri = getContentResolver().insert(PwDataProvider.CONTENT_URL, values);
                     Toast.makeText(getBaseContext(), "Data was successfully saved", Toast.LENGTH_SHORT).show();
 
                 }

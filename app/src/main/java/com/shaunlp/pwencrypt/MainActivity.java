@@ -86,6 +86,20 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.view_all_pwds_settings:
+                startActivity(new Intent(MainActivity.this, ViewAllActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+
+
     // Todo: probaly should make a class for this
     protected AlertDialog pwPromptBuilder(final boolean newPwFlag) {
         promptView = inflater.inflate(R.layout.prompts, null);

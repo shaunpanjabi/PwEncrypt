@@ -26,21 +26,21 @@ public class PwDataProvider extends ContentProvider{
     static final String TABLE_NAME = "pwds";
     static final String CREATE_TABLE =
             " CREATE TABLE " + TABLE_NAME +
-            " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             " description TEXT NOT NULL, " +
             " username TEXT NOT NULL, " +
             " pw TEXT NOT NULL, " +
             " source TEXT DEFAULT NULL, " +
             " notes TEXT DEFAULT NULL);";
 
-    static final String id = "id";
+    static final String id = "_id";
     static final String description = "description";
     static final String username = "username";
     static final String password = "pw";
     static final String source = "source";
     static final String notes = "notes";
 
-    static final String PROVIDER_NAME = "com.shaunlp.sandbox.PwDataProvider";
+    static final String PROVIDER_NAME = "com.shaunlp.pwencrypt.PwDataProvider";
     static final String URL = "content://" + PROVIDER_NAME + "/pwds";
     static final Uri CONTENT_URL =  Uri.parse(URL);
 
@@ -143,21 +143,4 @@ public class PwDataProvider extends ContentProvider{
         return rowsUpdated;
     }
 
-    private static class DatabaseHelper extends SQLiteOpenHelper{
-
-        DatabaseHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL(CREATE_TABLE);
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-            onCreate(db);
-        }
-    }
 }
