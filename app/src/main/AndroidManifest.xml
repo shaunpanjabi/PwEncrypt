@@ -23,7 +23,8 @@
             android:exported="true"
             android:multiprocess="true" />
 
-        <activity android:name=".ViewAllActivity"></activity>
+        <activity android:name=".ViewAllActivity" />
+        <activity android:name=".PwDetailActivity"></activity>
     </application>
 
 </manifest>

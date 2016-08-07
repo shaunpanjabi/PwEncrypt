@@ -27,4 +27,11 @@
         android:id="@+id/checkBox"
         android:checked="false" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:id="@+id/pw_dialog_message"
+        android:textColor="@color/warningRed"/>
+
 </LinearLayout>

@@ -3,4 +3,7 @@
     <string name="action_settings">Settings</string>
     <string name="view_all_pwds_settings">View All</string>
     <string name="import_export_settings">Import / Export</string>
+    <string name="invalid_pw">Invalid password.</string>
+    <string name="pw_match">Password matched</string>
+    <string name="pw_set_msg">Password set. Your data will be lost forever if it is forgotten.</string>
 </resources>

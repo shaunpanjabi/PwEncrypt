@@ -28,11 +28,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import android.support.design.widget.FloatingActionButton;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private View promptView;
     private String mPassword;
     private EditText userInput;
+    TextView pwDialog;
     private CheckBox showPwCheckBox;
     private LayoutInflater inflater;
 
@@ -61,9 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         Boolean pwFlag = sp.getBoolean(changePw, true);
 
-        AlertDialog alertDialog = pwPromptBuilder(pwFlag);
-        alertDialog.show();
-
+        displayPwPrompt(pwFlag);
         addCheckBoxListener();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(addPwIntent);
             }
         });
-
     }
 
     @Override
@@ -98,11 +97,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     // Todo: probaly should make a class for this
-    protected AlertDialog pwPromptBuilder(final boolean newPwFlag) {
+    protected AlertDialog displayPwPrompt(final boolean newPwFlag) {
         promptView = inflater.inflate(R.layout.prompts, null);
+        pwDialog = (TextView) promptView.findViewById(R.id.pw_dialog_message);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setView(promptView);
@@ -110,34 +108,50 @@ public class MainActivity extends AppCompatActivity {
         userInput = (EditText) promptView.findViewById(R.id.editTextDialogUserInput);
         userInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
+        if (newPwFlag) {
+            pwDialog.setText("First run, please enter in a new password.");
+        }
+
         alertDialogBuilder
-                .setCancelable(true)
+                .setCancelable(false)
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mPassword = computeSHA1(userInput.getText().toString());
-
-                                if (newPwFlag) {
-                                    // write new pw to shared prefs
-                                    spEditor.putString(pwHash, mPassword);
-                                    spEditor.putBoolean(changePw, false);
-                                    spEditor.commit();
-
-                                } else {
-                                    // check if pw matches shared prefs
-                                    String spPwHash = sp.getString(pwHash, null);
-                                    if (spPwHash.equals(mPassword)) {
-                                        Toast.makeText(MainActivity.this, "Password matched", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        Toast.makeText(MainActivity.this, "Invalid", Toast.LENGTH_LONG).show();
-                                    }
-                                }
-                                TextView tv = (TextView) findViewById(R.id.main_text_view);
-                                tv.setText(mPassword);
+                                // Empty because on click is overriden to avoid dialog from dismissing
                             }
                         });
-        AlertDialog alertDialog = alertDialogBuilder.create();
+        final AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPassword = computeSHA1(userInput.getText().toString());
+
+                if (newPwFlag) {
+                    // write new pw to shared prefs
+                    spEditor.putString(pwHash, mPassword);
+                    spEditor.putBoolean(changePw, false);
+                    spEditor.commit();
+                    Toast.makeText(MainActivity.this, R.string.pw_set_msg, Toast.LENGTH_LONG).show();
+                    alertDialog.dismiss();
+                } else {
+                    // check if pw matches shared prefs
+                    String spPwHash = sp.getString(pwHash, null);
+                    if (spPwHash.equals(mPassword)) {
+                        Toast.makeText(MainActivity.this, R.string.pw_match, Toast.LENGTH_LONG).show();
+                        alertDialog.dismiss();
+                    } else {
+
+                        pwDialog.setText(R.string.invalid_pw);
+                        Toast.makeText(MainActivity.this, R.string.invalid_pw, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                TextView tv = (TextView) findViewById(R.id.main_text_view);
+                tv.setText(mPassword);
+            }
+        });
+
         return alertDialog;
     }
 

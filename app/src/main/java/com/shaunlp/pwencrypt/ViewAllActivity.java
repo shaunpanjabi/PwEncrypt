@@ -1,5 +1,6 @@
 package com.shaunlp.pwencrypt;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,6 +13,11 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 public class ViewAllActivity extends AppCompatActivity {
+    public final static String descriptionExtra = "descriptionExtra";
+    public final static String usernameExtra = "usernameExtra";
+    public final static String pwExtra = "pwExtra";
+    public final static String sourceExtra = "sourceExtra";
+    public final static String notesExtra = "notesExtra";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +43,16 @@ public class ViewAllActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 cursor.moveToPosition(position);
-                cursor.getString(cursor.getColumnIndex(PwDataProvider.description));
+                String dbId = cursor.getString(cursor.getColumnIndex(PwDataProvider.id));
+                Intent detailIntent = new Intent(ViewAllActivity.this, PwDetailActivity.class);
+
+                // Pass data
+                detailIntent.putExtra(descriptionExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.description)));
+                detailIntent.putExtra(usernameExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.username)));
+                detailIntent.putExtra(pwExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.password)));
+                detailIntent.putExtra(sourceExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.source)));
+                detailIntent.putExtra(notesExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.notes)));
+                startActivity(detailIntent);
             }
         });
 
