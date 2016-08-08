@@ -6,4 +6,5 @@
     <string name="invalid_pw">Invalid password.</string>
     <string name="pw_match">Password matched</string>
     <string name="pw_set_msg">Password set. Your data will be lost forever if it is forgotten.</string>
+    <string name="first_run_enter_new_pw_msg">First run, please enter in a new password.</string>
 </resources>

@@ -32,7 +32,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/detail_username"
-        android:text="username"
         android:focusable="false"/>
 
     <TextView
@@ -41,12 +40,29 @@
         android:text="Password"
         android:focusable="false"/>
 
-    <EditText
-        android:layout_width="match_parent"
+    <RelativeLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/detail_pw"
-        android:text="password"
-        android:focusable="false"/>
+        android:orientation="horizontal">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/detail_pw"
+            android:layout_toRightOf="@+id/pw_detail_checkbox"
+            android:layout_alignParentLeft="true"
+            android:focusable="false"
+            android:layout_toLeftOf="@+id/pw_detail_checkbox"
+            android:layout_toStartOf="@+id/pw_detail_checkbox" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/pw_detail_checkbox"
+            android:layout_alignParentRight="true"
+            />
+
+    </RelativeLayout>
 
     <TextView
         android:layout_width="match_parent"
@@ -58,7 +74,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/detail_source"
-        android:text="source"
         android:focusable="false"/>
 
     <TextView
@@ -71,7 +86,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/detail_notes"
-        android:text="notes"
         android:focusable="false"/>
 
 </LinearLayout>

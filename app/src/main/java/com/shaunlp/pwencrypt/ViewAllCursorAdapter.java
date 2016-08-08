@@ -12,9 +12,11 @@ import android.widget.TextView;
  * Created by shaunpanjabi on 7/9/16.
  */
 public class ViewAllCursorAdapter extends CursorAdapter {
+    String mPassword;
 
-    public ViewAllCursorAdapter(Context context, Cursor cursor, int flags) {
+    public ViewAllCursorAdapter(Context context, Cursor cursor, String pw, int flags) {
         super(context, cursor, 0);
+        mPassword = pw;
     }
 
     @Override
@@ -30,7 +32,18 @@ public class ViewAllCursorAdapter extends CursorAdapter {
         String desc = cursor.getString(cursor.getColumnIndex(PwDataProvider.description));
         String username = cursor.getString(cursor.getColumnIndex(PwDataProvider.username));
 
-        tvDesc.setText(desc);
-        tvUsername.setText(username);
+        try {
+            String test = AESHelper.decrypt(mPassword, desc);
+            String test1 = AESHelper.decrypt(mPassword, username);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            tvDesc.setText(AESHelper.decrypt(mPassword, desc));
+            tvUsername.setText(AESHelper.decrypt(mPassword, username));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -17,6 +17,9 @@ public class AddPwActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_pw);
 
+        Bundle extras = getIntent().getExtras();
+        final String mPassword = extras.getString(MainActivity.pwExtra);
+
         final ContentValues values = new ContentValues();
         Button saveButton = (Button) findViewById(R.id.save_button);
         final EditText descField = (EditText) findViewById(R.id.editDescriptionText);
@@ -49,14 +52,18 @@ public class AddPwActivity extends AppCompatActivity {
 
                 if (proceed) {
                     // Todo: Encrypt data before adding
-                    values.put(PwDataProvider.description, descTxt);
-                    values.put(PwDataProvider.username, usernameTxt);
-                    values.put(PwDataProvider.password, pwTxt);
-                    if (!TextUtils.isEmpty(sourceTxt)){
-                        values.put(PwDataProvider.source, sourceTxt);
-                    }
-                    if (!TextUtils.isEmpty(notesTxt)){
-                        values.put(PwDataProvider.notes, notesTxt);
+                    try {
+                        values.put(PwDataProvider.description, AESHelper.encrypt(mPassword, descTxt));
+                        values.put(PwDataProvider.username, AESHelper.encrypt(mPassword, usernameTxt));
+                        values.put(PwDataProvider.password, AESHelper.encrypt(mPassword, pwTxt));
+                        if (!TextUtils.isEmpty(sourceTxt)){
+                            values.put(PwDataProvider.source, AESHelper.encrypt(mPassword, sourceTxt));
+                        }
+                        if (!TextUtils.isEmpty(notesTxt)){
+                            values.put(PwDataProvider.notes, AESHelper.encrypt(mPassword, notesTxt));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
                     Uri uri = getContentResolver().insert(PwDataProvider.CONTENT_URL, values);

@@ -32,7 +32,6 @@ import android.support.design.widget.FloatingActionButton;
 public class MainActivity extends AppCompatActivity {
 
     private View promptView;
-    private String mPassword;
     private EditText userInput;
     TextView pwDialog;
     private CheckBox showPwCheckBox;
@@ -44,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String sharedPrefs = "PwEncryptSP";
     public static final String changePw = "changePw";
     private final String LOG_TAG = "MainActivity";
+    public static final String pwExtra = "PW_EXTRA";
+    private String mPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent addPwIntent = new Intent(MainActivity.this, AddPwActivity.class);
+                addPwIntent.putExtra(pwExtra, mPassword);
                 startActivity(addPwIntent);
             }
         });
@@ -89,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.view_all_pwds_settings:
-                startActivity(new Intent(MainActivity.this, ViewAllActivity.class));
+                Intent viewAllPwdsIntent = new Intent(MainActivity.this, ViewAllActivity.class);
+                viewAllPwdsIntent.putExtra(pwExtra, mPassword);
+                startActivity(viewAllPwdsIntent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -109,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         userInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
         if (newPwFlag) {
-            pwDialog.setText("First run, please enter in a new password.");
+            pwDialog.setText(R.string.first_run_enter_new_pw_msg);
         }
 
         alertDialogBuilder
@@ -126,11 +130,12 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPassword = computeSHA1(userInput.getText().toString());
+                mPassword = userInput.getText().toString();
+                String pwHashReceived = computeSHA1(mPassword);
 
                 if (newPwFlag) {
                     // write new pw to shared prefs
-                    spEditor.putString(pwHash, mPassword);
+                    spEditor.putString(pwHash, pwHashReceived);
                     spEditor.putBoolean(changePw, false);
                     spEditor.commit();
                     Toast.makeText(MainActivity.this, R.string.pw_set_msg, Toast.LENGTH_LONG).show();
@@ -138,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     // check if pw matches shared prefs
                     String spPwHash = sp.getString(pwHash, null);
-                    if (spPwHash.equals(mPassword)) {
+                    if (spPwHash.equals(pwHashReceived)) {
                         Toast.makeText(MainActivity.this, R.string.pw_match, Toast.LENGTH_LONG).show();
                         alertDialog.dismiss();
                     } else {
@@ -148,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 TextView tv = (TextView) findViewById(R.id.main_text_view);
-                tv.setText(mPassword);
             }
         });
 
@@ -168,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
 
     public String computeSHA1(String pw) {
         MessageDigest mdSha1 = null;

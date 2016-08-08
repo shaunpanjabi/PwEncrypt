@@ -18,11 +18,14 @@ public class ViewAllActivity extends AppCompatActivity {
     public final static String pwExtra = "pwExtra";
     public final static String sourceExtra = "sourceExtra";
     public final static String notesExtra = "notesExtra";
+    private String mPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_all);
+
+        mPassword = getIntent().getExtras().getString(MainActivity.pwExtra);
 
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         SQLiteDatabase sqlDb =  dbHelper.getWritableDatabase();
@@ -36,14 +39,13 @@ public class ViewAllActivity extends AppCompatActivity {
 
         ListView lv = (ListView) findViewById(R.id.listView);
 
-        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, 0);
+        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, mPassword, 0);
         lv.setAdapter(cursorAdapter);
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 cursor.moveToPosition(position);
-                String dbId = cursor.getString(cursor.getColumnIndex(PwDataProvider.id));
                 Intent detailIntent = new Intent(ViewAllActivity.this, PwDetailActivity.class);
 
                 // Pass data
