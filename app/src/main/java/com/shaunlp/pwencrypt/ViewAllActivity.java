@@ -14,6 +14,7 @@ import android.widget.ListView;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 
 public class ViewAllActivity extends AppCompatActivity {
     public final static String descriptionExtra = "descriptionExtra";
@@ -21,20 +22,18 @@ public class ViewAllActivity extends AppCompatActivity {
     public final static String pwExtra = "pwExtra";
     public final static String sourceExtra = "sourceExtra";
     public final static String notesExtra = "notesExtra";
-    private String mPassword;
-    private String mSalt;
-    private AesCbcWithIntegrity.SecretKeys sKey;
+    private AesCbcWithIntegrity.SecretKeys mSKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_all);
 
-        mPassword = getIntent().getExtras().getString(MainActivity.pwExtra);
-        mSalt = getIntent().getExtras().getString(MainActivity.saltExtra);
+        String sKeyBase64 = getIntent().getExtras().getString(MainActivity.sKeyExtra);
+
         try {
-            sKey = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
-        } catch (GeneralSecurityException e) {
+            mSKey = AesCbcWithIntegrity.keys(sKeyBase64);
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
 
@@ -50,7 +49,7 @@ public class ViewAllActivity extends AppCompatActivity {
 
         ListView lv = (ListView) findViewById(R.id.listView);
 
-        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, mPassword, mSalt);
+        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, mSKey);
         lv.setAdapter(cursorAdapter);
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -65,8 +64,8 @@ public class ViewAllActivity extends AppCompatActivity {
                 // Pass data
                 detailIntent.putExtra(descriptionExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.description)));
                 try {
-                    detailIntent.putExtra(usernameExtra, AesCbcWithIntegrity.decryptString(encryptedUsername, sKey));
-                    detailIntent.putExtra(pwExtra, AesCbcWithIntegrity.decryptString(encryptedPw, sKey));
+                    detailIntent.putExtra(usernameExtra, AesCbcWithIntegrity.decryptString(encryptedUsername, mSKey));
+                    detailIntent.putExtra(pwExtra, AesCbcWithIntegrity.decryptString(encryptedPw, mSKey));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 } catch (GeneralSecurityException e) {

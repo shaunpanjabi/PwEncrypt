@@ -21,8 +21,7 @@ public class AddPwActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_pw);
 
         Bundle extras = getIntent().getExtras();
-        final String mPassword = extras.getString(MainActivity.pwExtra);
-        final String mSalt = extras.getString(MainActivity.saltExtra);
+        final String mSKey = extras.getString(MainActivity.sKeyExtra);
 
         final ContentValues values = new ContentValues();
         Button saveButton = (Button) findViewById(R.id.save_button);
@@ -57,7 +56,7 @@ public class AddPwActivity extends AppCompatActivity {
                 if (proceed) {
                     // Todo: Encrypt data before adding
                     try {
-                        AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
+                        AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.keys(mSKey);
 
                         values.put(PwDataProvider.description, descTxt);
                         values.put(PwDataProvider.username, AesCbcWithIntegrity.encrypt(usernameTxt, key).toString());

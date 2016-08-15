@@ -19,16 +19,9 @@ public class ViewAllCursorAdapter extends CursorAdapter {
     String mPassword;
     String mSalt;
 
-    public ViewAllCursorAdapter(Context context, Cursor cursor, String pw, String salt) {
+    public ViewAllCursorAdapter(Context context, Cursor cursor, AesCbcWithIntegrity.SecretKeys key) {
         super(context, cursor, 0);
-        mPassword = pw;
-        mSalt = salt;
-
-        try {
-            sKey = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
+        sKey = key;
     }
 
     @Override

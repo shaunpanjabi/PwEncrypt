@@ -47,8 +47,11 @@ public class MainActivity extends AppCompatActivity {
     private final String LOG_TAG = "MainActivity";
     public static final String pwExtra = "PW_EXTRA";
     public static final String saltExtra = "SALT_EXTRA";
+    public static final String sKeyExtra = "SECRET_KEY_EXTRA";
+
     private String mPassword;
     private String mSalt;
+    private String mSKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +79,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent addPwIntent = new Intent(MainActivity.this, AddPwActivity.class);
-                addPwIntent.putExtra(pwExtra, mPassword);
-                addPwIntent.putExtra(saltExtra, mSalt);
+                addPwIntent.putExtra(sKeyExtra, getSKey());
                 startActivity(addPwIntent);
             }
         });
+    }
+
+    private String getSKey() {
+        if (mSKey==null) {
+            try {
+                mSKey = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt).toString();
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+        }
+        return mSKey;
     }
 
     @Override
@@ -97,8 +110,7 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.view_all_pwds_settings:
                 Intent viewAllPwdsIntent = new Intent(MainActivity.this, ViewAllActivity.class);
-                viewAllPwdsIntent.putExtra(pwExtra, mPassword);
-                viewAllPwdsIntent.putExtra(saltExtra, mSalt);
+                viewAllPwdsIntent.putExtra(sKeyExtra, getSKey());
                 startActivity(viewAllPwdsIntent);
                 return true;
             default:
