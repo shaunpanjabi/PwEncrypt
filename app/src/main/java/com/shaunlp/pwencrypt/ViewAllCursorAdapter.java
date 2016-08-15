@@ -2,21 +2,33 @@ package com.shaunlp.pwencrypt;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 
+import java.security.GeneralSecurityException;
+
 /**
  * Created by shaunpanjabi on 7/9/16.
  */
 public class ViewAllCursorAdapter extends CursorAdapter {
+    AesCbcWithIntegrity.SecretKeys sKey;
     String mPassword;
+    String mSalt;
 
-    public ViewAllCursorAdapter(Context context, Cursor cursor, String pw, int flags) {
+    public ViewAllCursorAdapter(Context context, Cursor cursor, String pw, String salt) {
         super(context, cursor, 0);
         mPassword = pw;
+        mSalt = salt;
+
+        try {
+            sKey = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -32,16 +44,13 @@ public class ViewAllCursorAdapter extends CursorAdapter {
         String desc = cursor.getString(cursor.getColumnIndex(PwDataProvider.description));
         String username = cursor.getString(cursor.getColumnIndex(PwDataProvider.username));
 
-        try {
-            String test = AESHelper.decrypt(mPassword, desc);
-            String test1 = AESHelper.decrypt(mPassword, username);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         try {
-            tvDesc.setText(AESHelper.decrypt(mPassword, desc));
-            tvUsername.setText(AESHelper.decrypt(mPassword, username));
+            tvDesc.setText(desc);
+            Log.d("ViewAllCursorAdapter", "2");
+            AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(username);
+            Log.d("ViewAllCursorAdapter", "3");
+            tvUsername.setText(AesCbcWithIntegrity.decryptString(civ, sKey));
         } catch (Exception e) {
             e.printStackTrace();
         }

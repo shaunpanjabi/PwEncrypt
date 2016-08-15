@@ -10,6 +10,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+
 public class AddPwActivity extends AppCompatActivity {
 
     @Override
@@ -19,6 +22,7 @@ public class AddPwActivity extends AppCompatActivity {
 
         Bundle extras = getIntent().getExtras();
         final String mPassword = extras.getString(MainActivity.pwExtra);
+        final String mSalt = extras.getString(MainActivity.saltExtra);
 
         final ContentValues values = new ContentValues();
         Button saveButton = (Button) findViewById(R.id.save_button);
@@ -53,21 +57,30 @@ public class AddPwActivity extends AppCompatActivity {
                 if (proceed) {
                     // Todo: Encrypt data before adding
                     try {
-                        values.put(PwDataProvider.description, AESHelper.encrypt(mPassword, descTxt));
-                        values.put(PwDataProvider.username, AESHelper.encrypt(mPassword, usernameTxt));
-                        values.put(PwDataProvider.password, AESHelper.encrypt(mPassword, pwTxt));
+                        AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
+
+                        values.put(PwDataProvider.description, descTxt);
+                        values.put(PwDataProvider.username, AesCbcWithIntegrity.encrypt(usernameTxt, key).toString());
+                        values.put(PwDataProvider.password, AesCbcWithIntegrity.encrypt(pwTxt, key).toString());
                         if (!TextUtils.isEmpty(sourceTxt)){
-                            values.put(PwDataProvider.source, AESHelper.encrypt(mPassword, sourceTxt));
+                            values.put(PwDataProvider.source, sourceTxt);
                         }
                         if (!TextUtils.isEmpty(notesTxt)){
-                            values.put(PwDataProvider.notes, AESHelper.encrypt(mPassword, notesTxt));
+                            values.put(PwDataProvider.notes, notesTxt);
                         }
+                        Uri uri = getContentResolver().insert(PwDataProvider.CONTENT_URL, values);
+                        Toast.makeText(getBaseContext(), "Data was successfully saved", Toast.LENGTH_SHORT).show();
+                    } catch (GeneralSecurityException e) {
+                        Toast.makeText(getBaseContext(), "Something went wrong ERR_1.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        Toast.makeText(getBaseContext(), "Something went wrong ERR_2.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Something went wrong ERR_3.", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
 
-                    Uri uri = getContentResolver().insert(PwDataProvider.CONTENT_URL, values);
-                    Toast.makeText(getBaseContext(), "Data was successfully saved", Toast.LENGTH_SHORT).show();
 
                 }
             }

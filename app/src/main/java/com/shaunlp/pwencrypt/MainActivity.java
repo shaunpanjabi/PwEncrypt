@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import android.support.design.widget.FloatingActionButton;
@@ -40,11 +41,14 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sp;
     SharedPreferences.Editor spEditor;
     private final String pwHash = "pwHash";
+    private final String salt = "salt";
     public static final String sharedPrefs = "PwEncryptSP";
     public static final String changePw = "changePw";
     private final String LOG_TAG = "MainActivity";
     public static final String pwExtra = "PW_EXTRA";
+    public static final String saltExtra = "SALT_EXTRA";
     private String mPassword;
+    private String mSalt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent addPwIntent = new Intent(MainActivity.this, AddPwActivity.class);
                 addPwIntent.putExtra(pwExtra, mPassword);
+                addPwIntent.putExtra(saltExtra, mSalt);
                 startActivity(addPwIntent);
             }
         });
@@ -93,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.view_all_pwds_settings:
                 Intent viewAllPwdsIntent = new Intent(MainActivity.this, ViewAllActivity.class);
                 viewAllPwdsIntent.putExtra(pwExtra, mPassword);
+                viewAllPwdsIntent.putExtra(saltExtra, mSalt);
                 startActivity(viewAllPwdsIntent);
                 return true;
             default:
@@ -136,6 +142,14 @@ public class MainActivity extends AppCompatActivity {
                 if (newPwFlag) {
                     // write new pw to shared prefs
                     spEditor.putString(pwHash, pwHashReceived);
+
+                    try {
+                        byte[] newSalt = AesCbcWithIntegrity.generateSalt();
+                        mSalt = AesCbcWithIntegrity.saltString(newSalt);
+                        spEditor.putString(salt, mSalt);
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                    }
                     spEditor.putBoolean(changePw, false);
                     spEditor.commit();
                     Toast.makeText(MainActivity.this, R.string.pw_set_msg, Toast.LENGTH_LONG).show();
@@ -143,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     // check if pw matches shared prefs
                     String spPwHash = sp.getString(pwHash, null);
+                    mSalt = sp.getString(salt, null);
                     if (spPwHash.equals(pwHashReceived)) {
                         Toast.makeText(MainActivity.this, R.string.pw_match, Toast.LENGTH_LONG).show();
                         alertDialog.dismiss();

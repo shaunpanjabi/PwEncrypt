@@ -12,6 +12,9 @@ import android.view.ViewDebug;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+
 public class ViewAllActivity extends AppCompatActivity {
     public final static String descriptionExtra = "descriptionExtra";
     public final static String usernameExtra = "usernameExtra";
@@ -19,6 +22,8 @@ public class ViewAllActivity extends AppCompatActivity {
     public final static String sourceExtra = "sourceExtra";
     public final static String notesExtra = "notesExtra";
     private String mPassword;
+    private String mSalt;
+    private AesCbcWithIntegrity.SecretKeys sKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +31,12 @@ public class ViewAllActivity extends AppCompatActivity {
         setContentView(R.layout.activity_view_all);
 
         mPassword = getIntent().getExtras().getString(MainActivity.pwExtra);
+        mSalt = getIntent().getExtras().getString(MainActivity.saltExtra);
+        try {
+            sKey = AesCbcWithIntegrity.generateKeyFromPassword(mPassword, mSalt);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
 
         DatabaseHelper dbHelper = new DatabaseHelper(this);
         SQLiteDatabase sqlDb =  dbHelper.getWritableDatabase();
@@ -39,7 +50,7 @@ public class ViewAllActivity extends AppCompatActivity {
 
         ListView lv = (ListView) findViewById(R.id.listView);
 
-        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, mPassword, 0);
+        ViewAllCursorAdapter cursorAdapter = new ViewAllCursorAdapter(this, cursor, mPassword, mSalt);
         lv.setAdapter(cursorAdapter);
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -48,10 +59,20 @@ public class ViewAllActivity extends AppCompatActivity {
                 cursor.moveToPosition(position);
                 Intent detailIntent = new Intent(ViewAllActivity.this, PwDetailActivity.class);
 
+                AesCbcWithIntegrity.CipherTextIvMac encryptedUsername = new AesCbcWithIntegrity.CipherTextIvMac(cursor.getString(cursor.getColumnIndex(PwDataProvider.username)));
+                AesCbcWithIntegrity.CipherTextIvMac encryptedPw = new AesCbcWithIntegrity.CipherTextIvMac(cursor.getString(cursor.getColumnIndex(PwDataProvider.password)));
+
                 // Pass data
                 detailIntent.putExtra(descriptionExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.description)));
-                detailIntent.putExtra(usernameExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.username)));
-                detailIntent.putExtra(pwExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.password)));
+                try {
+                    detailIntent.putExtra(usernameExtra, AesCbcWithIntegrity.decryptString(encryptedUsername, sKey));
+                    detailIntent.putExtra(pwExtra, AesCbcWithIntegrity.decryptString(encryptedPw, sKey));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                }
+
                 detailIntent.putExtra(sourceExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.source)));
                 detailIntent.putExtra(notesExtra, cursor.getString(cursor.getColumnIndex(PwDataProvider.notes)));
                 startActivity(detailIntent);
